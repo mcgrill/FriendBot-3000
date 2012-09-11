@@ -27,6 +27,10 @@
    by Nick McGill [nmcgill.com]
 
  */
+ 
+#define CONVO_THRESHOLD 24
+#define COUNTER_THRESH 50
+
 
 const int pingPin = 7;
 const int analogOutPin = 6; // Analog output pin that the buzzer is attached to.
@@ -34,6 +38,7 @@ const int LED_pwm = 5;      // Aout pin for the LED
 int PWM_val = 0;
 boolean dir = 0;
 boolean foundPerson = 0;
+int counter = 0;
 
 void setup() {
   Serial.begin(9600);  // initialize serial communication
@@ -74,7 +79,7 @@ void loop()
   
 
   //******************** Logic for detecting a person
-  if( (inches < 3) && (foundPerson == 0) ){
+  if( (inches < CONVO_THRESHOLD) && (foundPerson == 0) ){
     for(int i = 0; i<2; i++){
      analogWrite(analogOutPin, 0); 
      delay(100);
@@ -89,12 +94,18 @@ void loop()
     }
     analogWrite(analogOutPin, 0);  
     foundPerson = 1;
+    analogWrite(LED_pwm, 240);
+    counter = 0;
   }
-  else if( (inches > 10) ){
-    foundPerson = 0;
+  else if( (inches > CONVO_THRESHOLD) ){
+    counter++;
+    if(counter > COUNTER_THRESH){
+      foundPerson = 0;
+      analogWrite(LED_pwm, 0);
+    }
   }
 
-  LED_update();  
+//  LED_update();  
   delay(100);
 }
 
@@ -105,19 +116,9 @@ void LED_update(void){
     analogWrite(LED_pwm, 0); 
   }
   else{
-    if(dir && (PWM_val < 250)){
+    if(PWM_val < 250){
       PWM_val+=5;
       analogWrite(LED_pwm, PWM_val); 
-    }
-    else if (PWM_val >= 250){
-      dir = 0;
-    }
-    else if(!dir && (PWM_val > 1)){
-      PWM_val-=5;
-      analogWrite(LED_pwm, PWM_val); 
-    }
-    else if(PWM_val <= 1){
-      dir = 1;
     }
   }
 }
